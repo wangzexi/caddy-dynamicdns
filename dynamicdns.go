@@ -18,6 +18,7 @@ import (
 	"encoding/json"
 	"fmt"
 	"net"
+	"strconv"
 	"strings"
 	"sync"
 	"time"
@@ -242,7 +243,7 @@ func (a App) checkIPAndUpdateDNS() {
 				zap.String("name", rec.Name),
 				zap.String("value", rec.Value),
 				zap.Duration("ttl", rec.TTL),
-				zap.String("recordId", rec.ID),
+				zap.String("recordId", strconv.Atoi(rec.ID)),
 			)
 		}
 		_, err = a.dnsProvider.SetRecords(a.ctx, zone, records)
