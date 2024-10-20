@@ -21,7 +21,6 @@ import (
 	"strings"
 	"sync"
 	"time"
-	"strconv"
 
 	"github.com/caddyserver/caddy/v2"
 	"github.com/caddyserver/caddy/v2/modules/caddyhttp"
@@ -243,7 +242,7 @@ func (a App) checkIPAndUpdateDNS() {
 				zap.String("name", rec.Name),
 				zap.String("value", rec.Value),
 				zap.Duration("ttl", rec.TTL),
-				zap.String("recordId", strconv.Atoi(rec.ID)),
+				zap.String("recordId", rec.ID),
 			)
 		}
 		_, err = a.dnsProvider.SetRecords(a.ctx, zone, records)
