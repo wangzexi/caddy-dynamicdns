@@ -29,15 +29,18 @@ func init() {
 // Syntax:
 //
 //	dynamic_dns {
+//		provider <name> ...
 //		domains {
 //			<zone> <names...>
 //		}
-//		check_interval <duration>
-//		provider <name> ...
-//		ip_source upnp|simple_http <endpoint>
+//		ipv4 {
+//			ip_source simple_http <endpoint>
+//		}
+//		ipv6 {
+//			ip_source interface <interface>
+//		}
 //		update_only
-//		dynamic_domains
-//		versions ipv4|ipv6
+//		check_interval <duration>
 //		ttl <duration>
 //	}
 //
@@ -75,12 +78,6 @@ func parseApp(d *caddyfile.Dispenser, _ interface{}) (interface{}, error) {
 			}
 			app.UpdateOnly = true
 
-		case "dynamic_domains":
-			if d.NextArg() {
-				return nil, d.ArgErr()
-			}
-			app.DynamicDomains = true
-
 		case "check_interval":
 			if !d.NextArg() {
 				return nil, d.ArgErr()
@@ -103,45 +100,6 @@ func parseApp(d *caddyfile.Dispenser, _ interface{}) (interface{}, error) {
 			}
 			app.DNSProviderRaw = caddyconfig.JSONModuleObject(unm, "name", provName, nil)
 
-		case "ip_source":
-			if !d.NextArg() {
-				return nil, d.ArgErr()
-			}
-			sourceType := d.Val()
-			modID := "dynamic_dns.ip_sources." + sourceType
-			unm, err := caddyfile.UnmarshalModule(d, modID)
-			if err != nil {
-				return nil, err
-			}
-			app.IPSourcesRaw = append(app.IPSourcesRaw, caddyconfig.JSONModuleObject(unm, "source", sourceType, nil))
-
-		case "versions":
-			args := d.RemainingArgs()
-			if len(args) == 0 {
-				return nil, d.Errf("Must specify at least one version")
-			}
-
-			// Set up defaults; if versions are specified,
-			// both versions start as false, then flipped
-			// to true otherwise.
-			falseBool := false
-			app.Versions = IPVersions{
-				IPv4: &falseBool,
-				IPv6: &falseBool,
-			}
-
-			trueBool := true
-			for _, arg := range args {
-				switch arg {
-				case "ipv4":
-					app.Versions.IPv4 = &trueBool
-				case "ipv6":
-					app.Versions.IPv6 = &trueBool
-				default:
-					return nil, d.Errf("Unsupported version: '%s'", arg)
-				}
-			}
-
 		case "ttl":
 			if !d.NextArg() {
 				return nil, d.ArgErr()
@@ -151,6 +109,51 @@ func parseApp(d *caddyfile.Dispenser, _ interface{}) (interface{}, error) {
 				return nil, err
 			}
 			app.TTL = caddy.Duration(dur)
+
+		case "ipv4":
+			if d.NextArg() {
+				return nil, d.ArgErr()
+			}
+
+			ipv4Nesting := d.Nesting()
+			for d.NextBlock(ipv4Nesting) {
+				switch d.Val() {
+				case "ip_source":
+					if !d.NextArg() {
+						return nil, d.ArgErr()
+					}
+					sourceType := d.Val()
+					modID := "dynamic_dns.ip_sources." + sourceType
+					unm, err := caddyfile.UnmarshalModule(d, modID)
+					if err != nil {
+						return nil, err
+					}
+					app.IPv4SourcesRaw = append(app.IPv4SourcesRaw, caddyconfig.JSONModuleObject(unm, "source", sourceType, nil))
+				}
+			}
+
+		case "ipv6":
+			if d.NextArg() {
+				return nil, d.ArgErr()
+			}
+
+			ipv6Nesting := d.Nesting()
+			for d.NextBlock(ipv6Nesting) {
+				switch d.Val() {
+				case "ip_source":
+					if !d.NextArg() {
+						return nil, d.ArgErr()
+					}
+					sourceType := d.Val()
+					modID := "dynamic_dns.ip_sources." + sourceType
+					unm, err := caddyfile.UnmarshalModule(d, modID)
+					if err != nil {
+						return nil, err
+					}
+					app.IPv6SourcesRaw = append(app.IPv6SourcesRaw, caddyconfig.JSONModuleObject(unm, "source", sourceType, nil))
+				}
+			}
+
 		default:
 			return nil, d.ArgErr()
 		}
