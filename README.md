@@ -11,29 +11,29 @@ IP sources and DNS providers are modular. This app comes with IP source modules.
 
 ```
 {
-	dynamic_dns {
-		provider tencentcloud {
-			secret_id mysecret
-			secret_key mykey
-		}
+  dynamic_dns {
+    provider tencentcloud {
+      secret_id mysecret
+      secret_key mykey
+    }
 
-		domains {
-			example.com www
-		}
+    domains {
+      example.com www
+    }
 
-		ipv4 {
-			ip_source simple_http https://icanhazip.com
-			ip_source simple_http https://ifconfig.me
-		}
+    ipv4 {
+      ip_source simple_http https://icanhazip.com
+      ip_source simple_http https://ifconfig.me
+    }
 
-		ipv6 {
-			ip_source interface eth0
-		}
+    ipv6 {
+      ip_source interface eth0
+    }
 
-		ttl 600s
-		check_interval 30m
+    ttl 600s
+    check_interval 30m
 
-		# update_only # if set, only existing records will be updated
-	}
+    # update_only # if set, only existing records will be updated
+  }
 }
 ```
